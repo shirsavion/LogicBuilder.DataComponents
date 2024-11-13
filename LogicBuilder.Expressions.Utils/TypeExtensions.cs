@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.OData.ModelBuilder;
 
 namespace LogicBuilder.Expressions.Utils
 {
@@ -191,9 +192,14 @@ namespace LogicBuilder.Expressions.Utils
         public static MemberInfo[] GetSelectedMembers(this Type parentType, List<string> selects)
         {
             if (selects == null || !selects.Any())
-                return parentType.GetValueTypeMembers();
+                return parentType.GetValueTypeMembers().Union(parentType.GetAutoExpandedMembers()).ToArray();
 
             return selects.Select(select => parentType.GetMemberInfo(select)).ToArray();
+        }
+
+        private static MemberInfo[] GetAutoExpandedMembers(this Type parentType)
+        {
+            return parentType.GetMemberInfos().Where(x => x.IsDefined(typeof(AutoExpandAttribute))).ToArray();
         }
 
         private static MemberInfo[] GetValueTypeMembers(this Type parentType)

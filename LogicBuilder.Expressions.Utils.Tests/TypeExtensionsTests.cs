@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.OData.ModelBuilder;
 using Xunit;
 
 namespace LogicBuilder.Expressions.Utils.Tests
@@ -63,6 +64,23 @@ namespace LogicBuilder.Expressions.Utils.Tests
                 Assert.Contains(names, name => name == nameof(Thing.Description));
             });
         }
+        
+        [Fact]
+        public void GetSelectedMembers_WhenSelectIsEmpty_ShouldReturnAutoExpandedMembers()
+        {
+            // Act
+            var memberInfos = typeof(ComplexThing).GetSelectedMembers(Enumerable.Empty<string>().ToList());
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                var names = memberInfos.Select(mi => mi.Name).ToList();
+
+                Assert.DoesNotContain(memberInfos, name => name.Name == nameof(ComplexThing.NotAutoExpandedThings));
+
+                Assert.Contains(names, name => name == nameof(ComplexThing.AutoExpandedThings));
+            });
+        }
 
         private abstract class BaseThing
         {
@@ -97,5 +115,13 @@ namespace LogicBuilder.Expressions.Utils.Tests
             public IEnumerable<int> Ints { get; set; }
             public List<object> Objects { get; set; }
         }
+
+        private class ComplexThing
+        {
+            [AutoExpand]
+            public List<Thing> AutoExpandedThings { get; set; }
+            public List<Thing> NotAutoExpandedThings { get; set; }
+            
+        } 
     }
 }
